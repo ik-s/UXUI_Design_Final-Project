@@ -22,6 +22,7 @@ export type Coordinates = {
 export type ManualMapLocation = Coordinates & {
   address: string;
   detailAddress: string;
+  neighborhood?: string;
   source: "manual_map";
   provider: "kakao";
 };

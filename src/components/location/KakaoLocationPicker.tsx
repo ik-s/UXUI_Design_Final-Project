@@ -34,6 +34,7 @@ export function KakaoLocationPicker({ initialCoordinates, onSubmit }: KakaoLocat
   );
   const [radiusMeters, setRadiusMeters] = useState<SearchRadiusMeters | "">("");
   const [address, setAddress] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
   const [geoError, setGeoError] = useState("");
   const [addressError, setAddressError] = useState("");
   const [submitError, setSubmitError] = useState("");
@@ -93,8 +94,9 @@ export function KakaoLocationPicker({ initialCoordinates, onSubmit }: KakaoLocat
     );
   }, []);
 
-  const handleAddressChange = useCallback((nextAddress: string, errorMessage?: string) => {
+  const handleAddressChange = useCallback((nextAddress: string, errorMessage?: string, nextNeighborhood?: string) => {
     setAddress(nextAddress);
+    setNeighborhood(nextNeighborhood ?? "");
     setAddressError(errorMessage ?? "");
     setIsAddressLoading(nextAddress === "주소를 확인하는 중이에요.");
   }, []);
@@ -109,6 +111,7 @@ export function KakaoLocationPicker({ initialCoordinates, onSubmit }: KakaoLocat
       coordinates: selectedCoordinates,
       address,
       detailAddress: "",
+      neighborhood,
     });
     const savedLocation = await submitManualMapLocation(location);
     setSubmitError("");

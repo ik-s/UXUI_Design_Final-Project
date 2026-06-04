@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { KakaoLocationPicker } from "../components/location/KakaoLocationPicker";
 import { MedicalFacilitiesMap } from "../components/location/MedicalFacilitiesMap";
 import { seoulNeighborhoods } from "../data/seoulNeighborhoods";
+import { useLocalStorageState } from "../hooks/useLocalStorageState";
 import type { Coordinates, ManualMapLocation, SearchRadiusMeters } from "../types";
 
 type ConfirmedSearchLocation = {
@@ -11,16 +12,25 @@ type ConfirmedSearchLocation = {
 
 type MapPageProps = {
   neighborhood: string;
+  onNeighborhoodChange: (value: string) => void;
 };
 
-export function MapPage({ neighborhood }: MapPageProps) {
-  const [confirmedSearch, setConfirmedSearch] = useState<ConfirmedSearchLocation | null>(null);
+export function MapPage({ neighborhood, onNeighborhoodChange }: MapPageProps) {
+  const [confirmedSearch, setConfirmedSearch] = useLocalStorageState<ConfirmedSearchLocation | null>(
+    "mojiday:confirmedSearch",
+    null,
+  );
   const [mode, setMode] = useState<"setup" | "facilities">("setup");
   const [showLocationComplete, setShowLocationComplete] = useState(false);
   const [showNeighborAdded, setShowNeighborAdded] = useState(false);
-  const [hasAcknowledgedLocation, setHasAcknowledgedLocation] = useState(false);
+  const [hasAcknowledgedLocation, setHasAcknowledgedLocation] = useState(Boolean(confirmedSearch));
   const [showNeighborPrompt, setShowNeighborPrompt] = useState(false);
-  const initialCoordinates = getNeighborhoodCoordinates(neighborhood);
+  const initialCoordinates = confirmedSearch
+    ? {
+        latitude: confirmedSearch.location.latitude,
+        longitude: confirmedSearch.location.longitude,
+      }
+    : getNeighborhoodCoordinates(neighborhood);
 
   useEffect(() => {
     document.querySelector(".phone-frame")?.scrollTo({ top: 0 });
@@ -53,7 +63,9 @@ export function MapPage({ neighborhood }: MapPageProps) {
       <KakaoLocationPicker
         initialCoordinates={initialCoordinates}
         onSubmit={(location, radiusMeters) => {
+          const nextNeighborhood = location.neighborhood || getNeighborhoodFromAddress(location.address);
           setConfirmedSearch({ location, radiusMeters });
+          if (nextNeighborhood) onNeighborhoodChange(nextNeighborhood);
           setShowLocationComplete(true);
           setHasAcknowledgedLocation(false);
           setShowNeighborPrompt(false);
@@ -131,4 +143,13 @@ function getNeighborhoodCoordinates(neighborhood: string): Coordinates | undefin
     latitude: matched.lat,
     longitude: matched.lng,
   };
+}
+
+function getNeighborhoodFromAddress(address: string) {
+  const parts = address.split(/\s+/).filter(Boolean);
+  const gu = parts.find((part) => part.endsWith("구"));
+  const dong = parts.find((part) => part.endsWith("동"));
+
+  if (gu && dong) return `${gu} ${dong}`;
+  return "";
 }

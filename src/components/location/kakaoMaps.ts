@@ -27,6 +27,8 @@ export type KakaoCustomOverlay = {
 type KakaoAddressResult = {
   address?: {
     address_name?: string;
+    region_2depth_name?: string;
+    region_3depth_name?: string;
   };
   road_address?: {
     address_name?: string;
@@ -141,4 +143,13 @@ export function toCoordinates(latLng: KakaoLatLng): Coordinates {
 export function pickAddress(result: KakaoAddressResult[]) {
   const first = result[0];
   return first?.road_address?.address_name ?? first?.address?.address_name ?? "";
+}
+
+export function pickNeighborhood(result: KakaoAddressResult[]) {
+  const address = result[0]?.address;
+  const gu = address?.region_2depth_name?.trim();
+  const dong = address?.region_3depth_name?.trim();
+
+  if (gu && dong) return `${gu} ${dong}`;
+  return "";
 }

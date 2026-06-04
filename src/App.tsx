@@ -155,7 +155,7 @@ function App() {
           />
         );
       case "map":
-        return <MapPage neighborhood={neighborhood} />;
+        return <MapPage neighborhood={neighborhood} onNeighborhoodChange={setNeighborhood} />;
       case "community":
         return (
           <CommunityPage

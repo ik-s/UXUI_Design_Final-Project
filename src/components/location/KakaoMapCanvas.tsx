@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import type { Coordinates } from "../../types";
 import {
   pickAddress,
+  pickNeighborhood,
   toCoordinates,
   toLatLng,
   type KakaoMap,
@@ -13,7 +14,7 @@ type KakaoMapCanvasProps = {
   kakao: KakaoNamespace;
   selectedCoordinates: Coordinates;
   onSelectCoordinates: (coordinates: Coordinates) => void;
-  onAddressChange: (address: string, errorMessage?: string) => void;
+  onAddressChange: (address: string, errorMessage?: string, neighborhood?: string) => void;
 };
 
 export function KakaoMapCanvas({
@@ -84,12 +85,13 @@ export function KakaoMapCanvas({
         }
 
         const address = pickAddress(result);
+        const neighborhood = pickNeighborhood(result);
         if (!address) {
           onAddressChange("", "선택한 좌표의 주소를 찾지 못했어요.");
           return;
         }
 
-        onAddressChange(address);
+        onAddressChange(address, undefined, neighborhood);
       },
     );
 

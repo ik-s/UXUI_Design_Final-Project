@@ -4,18 +4,21 @@ type ManualMapLocationInput = {
   coordinates: Coordinates;
   address: string;
   detailAddress: string;
+  neighborhood?: string;
 };
 
 export function createManualMapLocation({
   coordinates,
   address,
   detailAddress,
+  neighborhood,
 }: ManualMapLocationInput): ManualMapLocation {
   return {
     latitude: coordinates.latitude,
     longitude: coordinates.longitude,
     address,
     detailAddress,
+    neighborhood,
     source: "manual_map",
     provider: "kakao",
   };
