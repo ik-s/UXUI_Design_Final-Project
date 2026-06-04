@@ -1,0 +1,123 @@
+.bottom-tabs {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 24px;
+  z-index: 9;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: 66px;
+  padding: 7px;
+  border: 1px solid #edf0ef;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(31, 42, 36, 0.12);
+}
+
+.bottom-tabs button {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 3px;
+  min-width: 0;
+  border-radius: 16px;
+  color: #6c767d;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.bottom-tabs button svg,
+.bottom-tabs button span {
+  position: relative;
+  z-index: 1;
+}
+
+.bottom-tabs button:not(.active) svg {
+  color: #6c767d;
+}
+
+.bottom-tabs .active {
+  background: transparent;
+  color: #3e9b72;
+  font-weight: 800;
+}
+
+.bottom-tabs .active svg {
+  color: #3e9b72;
+}
+
+.bottom-tabs .active::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  background: #eaf8f2;
+  z-index: 0;
+}
+
+.user-avatar {
+  display: grid;
+  place-items: center;
+  position: relative;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 1px solid #d8ece5;
+  background:
+    radial-gradient(circle at 35% 26%, rgba(255, 255, 255, 0.96) 0 20%, transparent 21%),
+    linear-gradient(180deg, #f8fffb 0%, #e7f5ef 100%);
+  overflow: hidden;
+}
+
+.user-avatar img {
+  width: 88%;
+  height: 88%;
+  object-fit: contain;
+  opacity: 0.96;
+  filter: brightness(0) saturate(100%) invert(57%) sepia(37%) saturate(523%) hue-rotate(106deg) brightness(92%) contrast(88%);
+}
+
+.user-avatar img.uploaded-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 1;
+  filter: none;
+}
+
+.user-avatar-small {
+  width: 48px;
+  height: 48px;
+}
+
+.user-avatar-medium {
+  width: 64px;
+  height: 64px;
+}
+
+.user-avatar-large {
+  width: 160px;
+  height: 160px;
+}
+
+.user-avatar-large img {
+  width: 82%;
+  height: 82%;
+}
+
+@media (max-width: 430px) {
+  .app-shell {
+    padding: 0;
+    background: #fff;
+  }
+
+  .phone-frame {
+    width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    box-shadow: none;
+  }
+}

@@ -1,0 +1,302 @@
+import { useRef, useState, type FormEvent, type PointerEvent } from "react";
+import {
+  MessageCircle,
+  Send,
+  ThumbsUp,
+  ArrowLeft,
+} from "lucide-react";
+import { communityPosts } from "../data/appData";
+import { UserAvatar } from "../components/UserAvatar";
+import { useLocalStorageState } from "../hooks/useLocalStorageState";
+import type { ConversationPartner } from "../types";
+
+type CommunityPost = (typeof communityPosts)[number];
+
+type CommunityComment = {
+  author: string;
+  body: string;
+  createdAt: string;
+  id: number;
+  postKey: string;
+};
+
+type CommunityPageProps = {
+  neighborhood: string;
+  onOpenChatList: () => void;
+  onOpenConversation: (
+    partner: ConversationPartner,
+    contextLabel?: string,
+    seedMessage?: string,
+  ) => void;
+};
+
+export function CommunityPage({
+  neighborhood,
+  onOpenChatList,
+  onOpenConversation,
+}: CommunityPageProps) {
+  const [view, setView] = useState<"list" | "detail">("list");
+  const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
+  const [isCategoryDragging, setIsCategoryDragging] = useState(false);
+  const [comments, setComments] = useLocalStorageState<CommunityComment[]>(
+    "mojiday:communityComments",
+    [],
+  );
+  const categoryRowRef = useRef<HTMLDivElement>(null);
+  const categoryDragRef = useRef({ active: false, scrollLeft: 0, startX: 0 });
+  const currentNeighborhood = getNeighborhoodName(neighborhood);
+  const addComment = (post: CommunityPost, body: string, anonymous: boolean) => {
+    const trimmed = body.trim();
+    if (!trimmed) return;
+
+    setComments((currentComments) => [
+      ...currentComments,
+      {
+        author: anonymous ? "익명" : "나",
+        body: trimmed,
+        createdAt: new Date().toISOString(),
+        id: Date.now(),
+        postKey: getPostKey(post),
+      },
+    ]);
+  };
+
+  const handleCategoryPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    const row = categoryRowRef.current;
+    if (!row) return;
+
+    categoryDragRef.current = {
+      active: true,
+      scrollLeft: row.scrollLeft,
+      startX: event.clientX,
+    };
+    row.setPointerCapture(event.pointerId);
+    setIsCategoryDragging(true);
+  };
+
+  const handleCategoryPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const row = categoryRowRef.current;
+    const drag = categoryDragRef.current;
+    if (!row || !drag.active) return;
+
+    event.preventDefault();
+    row.scrollLeft = drag.scrollLeft - (event.clientX - drag.startX);
+  };
+
+  const stopCategoryDrag = (event: PointerEvent<HTMLDivElement>) => {
+    const row = categoryRowRef.current;
+    categoryDragRef.current.active = false;
+    row?.releasePointerCapture(event.pointerId);
+    setIsCategoryDragging(false);
+  };
+
+  if (view === "detail" && selectedPost) {
+    return (
+      <PostDetailView
+        neighborhood={currentNeighborhood}
+        onOpenChatList={onOpenChatList}
+        onOpenConversation={onOpenConversation}
+        post={selectedPost}
+        comments={comments.filter((comment) => comment.postKey === getPostKey(selectedPost))}
+        onAddComment={addComment}
+        onBack={() => setView("list")}
+      />
+    );
+  }
+
+  return (
+    <div className="community-screen tab-screen">
+      <header className="community-top">
+        <strong>{currentNeighborhood}</strong>
+        <button aria-label="진행 중인 1:1 대화 목록" onClick={onOpenChatList}>
+          <MessageCircle size={22} />
+        </button>
+      </header>
+      <div
+        ref={categoryRowRef}
+        className={`category-row${isCategoryDragging ? " dragging" : ""}`}
+        onPointerDown={handleCategoryPointerDown}
+        onPointerLeave={stopCategoryDrag}
+        onPointerMove={handleCategoryPointerMove}
+        onPointerUp={stopCategoryDrag}
+      >
+        {["인기 🔥", "벌레 퇴치 요청", "동네질문", "동네맛집", "동네병원 추천", "고민 상담"].map(
+          (category, index) => (
+            <button className={index === 0 ? "active" : ""} key={category}>
+              {category}
+            </button>
+          ),
+        )}
+      </div>
+      <section className="post-list">
+        {communityPosts.map((post) => (
+          <button
+            className="post-card"
+            key={post.title}
+            onClick={() => {
+              setSelectedPost(post);
+              setView("detail");
+            }}
+          >
+            <span className="post-tag">{post.tag}</span>
+            <h2>
+              {post.accent && <em>{post.accent}</em>} {post.title}
+            </h2>
+            {post.body && <p>{post.body}</p>}
+            <div className="post-meta">
+              <span>{post.meta} · {post.statusEmoji}</span>
+              <span>{post.time}</span>
+            </div>
+          </button>
+        ))}
+      </section>
+    </div>
+  );
+}
+
+function PostDetailView({
+  comments,
+  neighborhood,
+  onAddComment,
+  onOpenChatList,
+  onOpenConversation,
+  post,
+  onBack,
+}: {
+  comments: CommunityComment[];
+  neighborhood: string;
+  onAddComment: (post: CommunityPost, body: string, anonymous: boolean) => void;
+  onOpenChatList: () => void;
+  onOpenConversation: (
+    partner: ConversationPartner,
+    contextLabel?: string,
+    seedMessage?: string,
+  ) => void;
+  post: CommunityPost;
+  onBack: () => void;
+}) {
+  const author = post.meta.split("·")[0]?.trim() || "익명";
+  const [commentBody, setCommentBody] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(true);
+
+  const submitComment = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onAddComment(post, commentBody, isAnonymous);
+    setCommentBody("");
+  };
+
+  return (
+    <div className="community-detail-screen tab-screen">
+      <header className="post-detail-top">
+        <button aria-label="게시글 목록으로 돌아가기" onClick={onBack}>
+          <ArrowLeft size={24} />
+        </button>
+        <div>
+          <strong>{post.tag}</strong>
+          <span>{neighborhood}</span>
+        </div>
+        <button aria-label="대화 알림" onClick={onOpenChatList}>
+          <MessageCircle size={22} />
+        </button>
+      </header>
+
+      <article className="post-detail-body">
+        <section className="post-author-row">
+          <UserAvatar size="small" />
+          <div>
+            <strong>{author}</strong>
+            <span>{post.time}</span>
+          </div>
+        </section>
+
+        <strong className="post-detail-title">{post.title}</strong>
+        {post.body && <p>{post.body.replace("... 더보기", "")}</p>}
+
+        <div className="post-detail-actions">
+          <button>
+            <ThumbsUp size={18} />
+            공감
+          </button>
+          <button>
+            <MessageCircle size={18} />
+            댓글
+          </button>
+          <button
+            onClick={() =>
+              onOpenConversation(
+                {
+                  id: `community-${author}`,
+                  name: author,
+                  statusEmoji: post.statusEmoji,
+                  statusLabel: post.tag,
+                },
+                post.title,
+                post.body || post.title,
+              )
+            }
+          >
+            <MessageCircle size={18} />
+            대화하기
+          </button>
+        </div>
+      </article>
+
+      {comments.length > 0 ? (
+        <section className="post-comments-list">
+          {comments.map((comment) => (
+            <article key={comment.id}>
+              <header>
+                <strong>{comment.author}</strong>
+                <time>{formatCommentTime(comment.createdAt)}</time>
+              </header>
+              <p>{comment.body}</p>
+            </article>
+          ))}
+        </section>
+      ) : (
+        <section className="post-comments-empty">
+          <MessageCircle size={46} />
+          <p>첫 댓글을 남겨주세요.</p>
+        </section>
+      )}
+
+      <form className="comment-composer" onSubmit={submitComment}>
+        <label>
+          <input
+            type="checkbox"
+            checked={isAnonymous}
+            onChange={(event) => setIsAnonymous(event.target.checked)}
+          />
+          익명
+        </label>
+        <input
+          value={commentBody}
+          onChange={(event) => setCommentBody(event.target.value)}
+          placeholder="댓글을 입력하세요."
+        />
+        <button type="submit" aria-label="댓글 보내기">
+          <Send size={22} />
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function getNeighborhoodName(neighborhood: string) {
+  return neighborhood || "동네명";
+}
+
+function getPostKey(post: CommunityPost) {
+  return post.title;
+}
+
+function formatCommentTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleTimeString("ko-KR", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
