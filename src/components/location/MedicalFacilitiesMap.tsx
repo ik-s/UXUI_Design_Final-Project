@@ -40,8 +40,8 @@ type MedicalFacilitiesMapProps = {
 const radiusOptions: Array<{ label: string; value: SearchRadiusMeters }> = [
   { label: "500m", value: 500 },
   { label: "1km", value: 1000 },
+  { label: "2km", value: 2000 },
   { label: "3km", value: 3000 },
-  { label: "5km", value: 5000 },
 ];
 
 const categoryOptions: Array<{ id: FacilityCategoryId; label: string }> = [
@@ -89,6 +89,7 @@ export function MedicalFacilitiesMap({
   const [facilities, setFacilities] = useState<FacilityWithDistance[]>([]);
   const [selectedFacility, setSelectedFacility] = useState<FacilityWithDistance | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [isListExpanded, setIsListExpanded] = useState(false);
   const [searchError, setSearchError] = useState("");
 
   const fallbackFacilities = useMemo(
@@ -178,14 +179,16 @@ export function MedicalFacilitiesMap({
     setSelectedFacility(facilities[0] ?? null);
   }, [facilities]);
 
+  useEffect(() => {
+    setIsListExpanded(false);
+  }, [selectedCategory, selectedRadius]);
+
   return (
     <div className="facility-results-screen">
       <header className="facility-search-header">
         <button onClick={onBack} aria-label="위치 설정으로 돌아가기">
           <ArrowLeft size={22} />
         </button>
-        <strong>의료기관</strong>
-        <span>{formatRadius(selectedRadius)}</span>
       </header>
 
       <section className="facility-control-group">
@@ -240,12 +243,38 @@ export function MedicalFacilitiesMap({
           </p>
         )}
 
-        <div className="facility-map-cta">
-          <span>목록보기</span>
-        </div>
+        <button
+          className="facility-map-cta"
+          disabled={!facilities.length || isSearching}
+          onClick={() => setIsListExpanded((current) => !current)}
+        >
+          <span>{isListExpanded ? "목록접기" : "목록보기"}</span>
+        </button>
       </section>
 
       <section className="facility-list-panel">
+        {isListExpanded && !isSearching && facilities.length > 0 && (
+          <div className="facility-expanded-list">
+            <header>
+              <strong>반경 내 의료기관</strong>
+              <span>{facilities.length}곳</span>
+            </header>
+            {facilities.map((facility) => (
+              <button
+                className={selectedFacility?.id === facility.id ? "selected" : ""}
+                key={facility.id}
+                onClick={() => setSelectedFacility(facility)}
+              >
+                <strong>{facility.name}</strong>
+                <span>
+                  {formatDistance(facility.distanceMeters)} ·{" "}
+                  {facility.roadAddress || facility.address}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {isSearching ? (
           <div className="facility-loading-card">
             <strong>주변 의료기관을 찾고 있어요.</strong>
@@ -337,7 +366,6 @@ function KakaoFacilityMap({
     facilities.forEach((facility) => {
       const content = document.createElement("button");
       const icon = document.createElement("span");
-      const label = document.createElement("strong");
 
       content.className = `kakao-medical-marker ${
         selectedFacility?.id === facility.id ? "selected" : ""
@@ -345,8 +373,7 @@ function KakaoFacilityMap({
       content.type = "button";
       content.setAttribute("aria-label", facility.name);
       icon.textContent = facility.type === "pharmacy" ? "P" : "+";
-      label.textContent = facility.name;
-      content.append(icon, label);
+      content.append(icon);
       content.addEventListener("click", () => onSelectFacility(facility));
 
       const overlay = new kakao.maps.CustomOverlay({
@@ -363,7 +390,6 @@ function KakaoFacilityMap({
   return (
     <>
       <div className="facility-kakao-map" ref={containerRef} aria-label="주변 의료기관 지도" />
-      {selectedFacility && <FloatingFacilityLabel facility={selectedFacility} />}
     </>
   );
 }
@@ -396,15 +422,6 @@ function FallbackFacilityMap({
           </button>
         );
       })}
-    </div>
-  );
-}
-
-function FloatingFacilityLabel({ facility }: { facility: FacilityWithDistance }) {
-  return (
-    <div className="floating-facility-label">
-      <Cross size={14} />
-      <strong>{facility.name}</strong>
     </div>
   );
 }

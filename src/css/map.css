@@ -346,23 +346,22 @@
 }
 
 .facility-search-header {
-  display: grid;
-  grid-template-columns: 34px 1fr auto;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 48px;
-  padding: 0 14px;
-  border-radius: 24px;
-  border: 1px solid #dfe8e3;
-  background: #f6fbf8;
+  width: max-content;
+  min-height: 40px;
 }
 
 .facility-search-header button {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #dfe8e3;
+  border-radius: 50%;
+  background: #fff;
   color: #2e3338;
+  box-shadow: 0 8px 20px rgba(52, 84, 71, 0.08);
 }
 
 .facility-search-header strong {
@@ -430,19 +429,6 @@
   border-radius: 18px;
   background: #edf7f2;
   box-shadow: 0 8px 22px rgba(52, 84, 71, 0.08);
-}
-
-.facility-map-stage::after {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  content: "";
-  background: radial-gradient(
-    circle at 50% 50%,
-    transparent 0 38%,
-    rgba(46, 51, 56, 0.18) 39% 100%
-  );
 }
 
 .facility-kakao-map,
@@ -522,7 +508,7 @@
 
 .kakao-medical-marker {
   display: inline-grid;
-  grid-template-columns: 30px max-content;
+  grid-template-columns: 30px;
   align-items: center;
   gap: 6px;
   border: 0;
@@ -536,18 +522,22 @@
   place-items: center;
   width: 30px;
   height: 30px;
-  border: 2px solid #151515;
+  border: 2px solid #2f9b78;
   border-radius: 9px;
-  background: #f36d5d;
-  color: #151515;
+  background: #e8f7ef;
+  color: #267a5c;
   font-size: 20px;
   font-weight: 900;
   line-height: 1;
-  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 4px 10px rgba(35, 116, 88, 0.22);
 }
 
 .kakao-medical-marker strong {
+  display: none;
   max-width: 140px;
+  padding: 7px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
   color: #2e3338;
   text-align: left;
   text-shadow: 0 1px 4px rgba(255, 255, 255, 0.92);
@@ -557,36 +547,14 @@
 }
 
 .kakao-medical-marker.selected span {
-  background: #ff8a74;
-  box-shadow: 0 0 0 5px rgba(255, 112, 88, 0.25);
-}
-
-.floating-facility-label {
-  position: absolute;
-  z-index: 4;
-  left: 50%;
-  top: 42%;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  max-width: 260px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.94);
-  color: #2e3338;
-  box-shadow: 0 8px 24px rgba(35, 54, 45, 0.16);
-  transform: translateX(-50%);
-}
-
-.floating-facility-label svg {
-  color: #ff7966;
-}
-
-.floating-facility-label strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 13px;
+  width: 32px;
+  height: 32px;
+  border-color: #151515;
+  background: #f36d5d;
+  color: #151515;
+  box-shadow:
+    0 0 0 5px rgba(255, 112, 88, 0.25),
+    0 5px 12px rgba(0, 0, 0, 0.25);
 }
 
 .facility-map-note {
@@ -620,11 +588,95 @@
   transform: translateX(-50%);
 }
 
+.facility-map-cta:disabled {
+  opacity: 0.58;
+}
+
 .facility-list-panel {
   display: grid;
   gap: 10px;
   padding-top: 12px;
   padding-bottom: 24px;
+}
+
+.facility-expanded-list {
+  display: grid;
+  gap: 8px;
+  max-height: 260px;
+  padding: 12px;
+  overflow-y: auto;
+  border: 1px solid #dfe8e3;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(52, 84, 71, 0.08);
+  animation: facility-list-drop 0.18s ease-out;
+}
+
+.facility-expanded-list header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 4px;
+}
+
+.facility-expanded-list header strong {
+  color: #20252a;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.facility-expanded-list header span {
+  color: #3e9872;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.facility-expanded-list button {
+  display: grid;
+  gap: 4px;
+  padding: 11px 12px;
+  border: 1px solid #e3ece7;
+  border-radius: 14px;
+  background: #f8fcfa;
+  color: #2e3338;
+  text-align: left;
+}
+
+.facility-expanded-list button.selected {
+  border-color: #79c9a4;
+  background: #e8f7ef;
+}
+
+.facility-expanded-list button strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.facility-expanded-list button span {
+  overflow: hidden;
+  color: #6b7880;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@keyframes facility-list-drop {
+  from {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  to {
+    max-height: 260px;
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .facility-info-card,

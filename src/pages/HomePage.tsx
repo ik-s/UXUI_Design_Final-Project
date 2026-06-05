@@ -341,10 +341,12 @@ export function HomePage({
               </button>
             )}
             <div className="neighbor-profile-actions">
-              <button>
-                <UserPlus size={18} />
-                친구추가
-              </button>
+              {selectedNeighbor.scope !== "friends" && (
+                <button>
+                  <UserPlus size={18} />
+                  친구추가
+                </button>
+              )}
               <button onClick={() => openHelpConversation(selectedNeighbor)}>
                 <HeartHandshake size={18} />
                 도움주기

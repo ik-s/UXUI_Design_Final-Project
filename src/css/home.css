@@ -576,8 +576,13 @@
   font-weight: 900;
 }
 
-.neighbor-profile-actions button:first-child {
+.neighbor-profile-actions button:first-child:not(:only-child) {
   border: 1px solid #d8e8df;
   background: #f6fbf8;
   color: #3e9872;
+}
+
+.neighbor-profile-actions button:only-child {
+  grid-column: 1 / -1;
+  width: 100%;
 }
