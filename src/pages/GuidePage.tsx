@@ -1,6 +1,12 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, HeartHandshake, MapPin, MessageCircle } from "lucide-react";
-import { guideSteps } from "../data/appData";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Gift,
+  MapPin,
+  MessageCircle,
+} from "lucide-react";
+import { defaultUserPoint, guideSteps } from "../data/appData";
 
 type GuidePageProps = {
   onNext: () => void;
@@ -58,12 +64,12 @@ function GuidePreview({ type }: { type: (typeof guideSteps)[number]["preview"] }
     return (
       <section className="guide-preview-card guide-neighbor-preview">
         <header>
-          <strong>주변 이웃 목록</strong>
+          <strong>친구 상태</strong>
           <span>송파구 문정동</span>
         </header>
         {[
-          ["🙂", "환스", "조금 불안해요", "방금"],
-          ["😟", "오우우", "확인이 필요해요", "12분 전"],
+          ["😟", "환스", "조금 불안해요", "방금"],
+          ["🫶", "서우", "확인이 필요해요", "12분 전"],
         ].map(([emoji, name, status, time]) => (
           <article key={name}>
             <span>{emoji}</span>
@@ -104,9 +110,9 @@ function GuidePreview({ type }: { type: (typeof guideSteps)[number]["preview"] }
           <MessageCircle size={20} />
         </header>
         <article>
-          <span>벌레 퇴치 요청</span>
-          <strong>벌레 잡아주세요 제발요</strong>
-          <p>오우우 · 화양동 · 😟</p>
+          <span>안부 나눔</span>
+          <strong>오늘 하루 어땠는지 한 줄만 남겨요</strong>
+          <p>환스 · 모지동 · 😟</p>
         </article>
         <button>
           <MessageCircle size={17} />
@@ -124,14 +130,18 @@ function GuidePreview({ type }: { type: (typeof guideSteps)[number]["preview"] }
           <span>활동 신뢰도</span>
         </header>
         <b>36.8°C</b>
-        <div>
-          <span>도와준 3회</span>
+        <div className="guide-profile-metrics">
+          <span>도움 3회</span>
           <span>고마워요 5개</span>
         </div>
-        <button>
-          <HeartHandshake size={17} />
-          포인트로 기프티콘 교환
-        </button>
+        <div className="guide-profile-point">
+          <span>나의 포인트</span>
+          <strong>{defaultUserPoint.toLocaleString()}P</strong>
+        </div>
+        <span className="guide-profile-exchange">
+          <Gift size={17} />
+          포인트 교환
+        </span>
       </section>
     );
   }
@@ -143,9 +153,9 @@ function GuidePreview({ type }: { type: (typeof guideSteps)[number]["preview"] }
         <span>상태 추가</span>
       </header>
       <div className="guide-status-compose-mini">
-        <span className="guide-face">🙂</span>
+        <span className="guide-face">😟</span>
         <div>
-          <strong>지금의 상태를 기록하세요!</strong>
+          <strong>지금의 상태를 기록하세요</strong>
           <p>조금 불안해요</p>
         </div>
       </div>

@@ -376,25 +376,50 @@
   font-weight: 900;
 }
 
-.facility-filter-row {
+.facility-control-group {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   padding: 12px 0;
 }
 
+.facility-radius-row,
+.facility-filter-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.facility-radius-row::-webkit-scrollbar,
+.facility-filter-row::-webkit-scrollbar {
+  display: none;
+}
+
+.facility-radius-row button,
 .facility-filter-row button {
+  flex: 0 0 auto;
   min-height: 34px;
+  padding: 0 14px;
   border-radius: 999px;
   background: transparent;
   color: #7a858c;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 900;
 }
 
+.facility-radius-row button {
+  border: 1px solid #dfe8e3;
+  background: #fff;
+}
+
+.facility-radius-row button.active,
 .facility-filter-row button.active {
   background: #e8f7ef;
   color: #3e9872;
+}
+
+.facility-radius-row button.active {
+  border-color: #79c9a4;
 }
 
 .facility-map-stage {
@@ -603,7 +628,8 @@
 }
 
 .facility-info-card,
-.facility-empty-card {
+.facility-empty-card,
+.facility-loading-card {
   display: grid;
   grid-template-columns: 46px 1fr;
   gap: 12px;
@@ -614,7 +640,8 @@
   box-shadow: 0 8px 22px rgba(52, 84, 71, 0.08);
 }
 
-.facility-empty-card {
+.facility-empty-card,
+.facility-loading-card {
   grid-template-columns: 1fr;
 }
 
@@ -657,11 +684,39 @@
 }
 
 .facility-info-card small,
-.facility-empty-card span {
+.facility-empty-card span,
+.facility-loading-card span {
   color: #7a858c;
   font-size: 12px;
   line-height: 1.35;
   font-weight: 800;
+}
+
+.facility-info-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.facility-info-actions a,
+.facility-info-actions span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: #eef9f4;
+  color: #3e9872;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.facility-info-actions span {
+  background: #f2f4f4;
+  color: #7a858c;
 }
 
 .facility-chip-row {

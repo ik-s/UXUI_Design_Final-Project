@@ -193,6 +193,7 @@ function App() {
       case "home":
         return (
           <HomePage
+            hasStatusEntryToday={hasStatusEntryToday}
             nickname={nickname || "모지님"}
             neighborhood={neighborhood}
             profileImage={profileImage}

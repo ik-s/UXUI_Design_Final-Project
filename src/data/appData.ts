@@ -40,8 +40,8 @@ export const statusItems = [
   {
     emoji: "📞",
     tone: "help",
-    label: "전화가 필요해요",
-    desc: "혼자 해결하기 어려워서 전화 가능한 친구를 찾고 있어요.",
+    label: "도움이 필요해요",
+    desc: "혼자 해결하기 어려워서 도와줄 수 있는 친구를 찾고 있어요.",
   },
 ];
 
@@ -71,7 +71,7 @@ export const guideSteps: GuideStep[] = [
     title: "동네 이야기를 나눠요",
   },
   {
-    body: "도움 완료와 감정 체크인은 포인트와 온도로 기록되어 나의 돌봄 기록으로 남아요.",
+    body: "오늘의 상태를 남기고 이웃에게 도움을 줄 때 마다 포인트와 온도로 기록되어 나의 돌봄 기록으로 남아요. 모은 포인트로는 보상도 받을 수 있어요.",
     id: "profile",
     preview: "profile",
     title: "기록을 모아 확인해요",

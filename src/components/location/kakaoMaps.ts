@@ -35,6 +35,25 @@ type KakaoAddressResult = {
   } | null;
 };
 
+export type KakaoPlaceResult = {
+  id?: string;
+  place_name?: string;
+  category_name?: string;
+  address_name?: string;
+  road_address_name?: string;
+  phone?: string;
+  distance?: string;
+  x?: string;
+  y?: string;
+  place_url?: string;
+};
+
+export type KakaoPlacesSearchOptions = {
+  location: KakaoLatLng;
+  radius: number;
+  sort?: string;
+};
+
 export type KakaoNamespace = {
   maps: {
     load: (callback: () => void) => void;
@@ -74,12 +93,28 @@ export type KakaoNamespace = {
     services: {
       Status: {
         OK: string;
+        ZERO_RESULT?: string;
+      };
+      SortBy: {
+        DISTANCE: string;
       };
       Geocoder: new () => {
         coord2Address: (
           longitude: number,
           latitude: number,
           callback: (result: KakaoAddressResult[], status: string) => void,
+        ) => void;
+      };
+      Places: new () => {
+        categorySearch: (
+          code: string,
+          callback: (result: KakaoPlaceResult[], status: string) => void,
+          options: KakaoPlacesSearchOptions,
+        ) => void;
+        keywordSearch: (
+          keyword: string,
+          callback: (result: KakaoPlaceResult[], status: string) => void,
+          options: KakaoPlacesSearchOptions,
         ) => void;
       };
     };

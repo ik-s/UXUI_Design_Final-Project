@@ -3,12 +3,15 @@ import type { Coordinates, SearchRadiusMeters } from "../types";
 export type MedicalFacility = Coordinates & {
   id: string;
   name: string;
-  category: "병원" | "의원" | "약국";
+  category: string;
   address: string;
-  openStatus: "open" | "closed";
-  closesAt: string;
+  roadAddress?: string;
+  openStatus?: "open" | "closed";
+  closesAt?: string;
   opensAt?: string;
   phone: string;
+  placeUrl?: string;
+  type?: "hospital" | "pharmacy" | "keyword";
 };
 
 export const medicalFacilities: MedicalFacility[] = [

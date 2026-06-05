@@ -18,6 +18,7 @@ import type { ConversationPartner } from "../types";
 type FeedScope = (typeof homeStatuses)[number]["scope"];
 
 type HomePageProps = {
+  hasStatusEntryToday: boolean;
   nickname: string;
   neighborhood: string;
   profileImage: string;
@@ -40,6 +41,7 @@ const feedScopeTabs: Array<{ id: FeedScope; label: string }> = [
 ];
 
 export function HomePage({
+  hasStatusEntryToday,
   nickname,
   neighborhood,
   profileImage,
@@ -57,6 +59,7 @@ export function HomePage({
     statusItems[1];
   const [isStatusPickerOpen, setIsStatusPickerOpen] = useState(false);
   const [statusPromptDismissed, setStatusPromptDismissed] = useState(false);
+  const [statusToast, setStatusToast] = useState("");
   const [selectedFeedScope, setSelectedFeedScope] = useState<FeedScope>("friends");
   const [selectedNeighbor, setSelectedNeighbor] = useState<(typeof homeStatuses)[number] | null>(
     null,
@@ -85,9 +88,16 @@ export function HomePage({
 
   const saveStatus = () => {
     const message = customMessage.trim() || selectedStatus.desc;
+    const alreadyClaimedPoint = hasStatusEntryToday;
     onStatusChange(selectedStatus.emoji, selectedStatus.label, message);
     setStatusPromptDismissed(true);
     setIsStatusPickerOpen(false);
+    setStatusToast(
+      alreadyClaimedPoint
+        ? "오늘 상태 포인트는 이미 획득했어요."
+        : "오늘 상태 기록으로 10P를 획득했어요.",
+    );
+    window.setTimeout(() => setStatusToast(""), 1800);
   };
 
   const skipStatus = () => {
@@ -147,6 +157,7 @@ export function HomePage({
 
   return (
     <div className="home-screen tab-screen">
+      {statusToast && <div className="status-toast">{statusToast}</div>}
       <header className="top-brand">
         <img src={logoText} alt="MojiDay" />
         <button aria-label="알림" onClick={onOpenNotifications}>
@@ -161,7 +172,7 @@ export function HomePage({
         </div>
         <button
           className={
-            statusLabel
+            hasStatusEntryToday && statusLabel
               ? `add-status has-status status-face status-face-${currentStatus.tone}`
               : "add-status"
           }
@@ -172,7 +183,7 @@ export function HomePage({
             setIsStatusPickerOpen(true);
           }}
         >
-          {statusLabel ? statusEmoji : <Plus size={30} />}
+          {hasStatusEntryToday && statusLabel ? statusEmoji : <Plus size={30} />}
         </button>
       </section>
       <div className="status-placeholder">
@@ -185,7 +196,6 @@ export function HomePage({
       <section className="feed-header">
         <div className="feed-location-row">
           <strong>{neighborhood || "동네 미설정"}</strong>
-          <span>친구 상태 먼저 보기</span>
         </div>
         <nav className="feed-scope-tabs" aria-label="상태 피드 범위">
           {feedScopeTabs.map((tab) => (

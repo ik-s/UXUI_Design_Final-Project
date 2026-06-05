@@ -1,3 +1,9 @@
+.community-screen {
+  position: relative;
+  min-height: 100%;
+  padding-bottom: 148px;
+}
+
 .community-top {
   display: flex;
   align-items: center;
@@ -74,6 +80,26 @@
 
 .post-list {
   display: grid;
+}
+
+.community-write-button {
+  position: sticky;
+  bottom: 96px;
+  z-index: 8;
+  display: flex;
+  width: max-content;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 18px 18px 0 auto;
+  padding: 0 17px;
+  border-radius: 999px;
+  background: #79c8a6;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  box-shadow: 0 12px 26px rgba(52, 84, 71, 0.18);
 }
 
 .post-card {
@@ -381,4 +407,136 @@
   display: grid;
   place-items: center;
   color: #4f9d7b;
+}
+
+.community-compose-backdrop {
+  position: fixed;
+  z-index: 28;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  align-items: end;
+  width: min(100vw, 390px);
+  height: min(100vh, 844px);
+  padding: 16px 14px 96px;
+  transform: translate(-50%, -50%);
+  background: rgba(31, 36, 40, 0.2);
+}
+
+.community-compose-sheet {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 18px 38px rgba(31, 36, 40, 0.18);
+}
+
+.community-compose-sheet header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.community-compose-sheet header strong {
+  display: block;
+  color: #30363a;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.community-compose-sheet header p {
+  margin: 5px 0 0;
+  color: #7b838a;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 800;
+}
+
+.community-compose-sheet header button {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 50%;
+  color: #65727b;
+}
+
+.community-compose-sheet form {
+  display: grid;
+  gap: 13px;
+}
+
+.community-compose-sheet label {
+  display: grid;
+  gap: 8px;
+}
+
+.community-compose-sheet label > span {
+  color: #3e9872;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.community-compose-categories {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.community-compose-categories::-webkit-scrollbar {
+  display: none;
+}
+
+.community-compose-categories button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid #dfe8e3;
+  border-radius: 999px;
+  background: #fff;
+  color: #65727b;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.community-compose-categories button.active {
+  border-color: #79c8a6;
+  background: #eef9f4;
+  color: #3e9872;
+}
+
+.community-compose-sheet input,
+.community-compose-sheet textarea {
+  width: 100%;
+  border: 1px solid #dfe8e3;
+  border-radius: 15px;
+  outline: 0;
+  color: #30363a;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.community-compose-sheet input {
+  height: 46px;
+  padding: 0 13px;
+}
+
+.community-compose-sheet textarea {
+  min-height: 104px;
+  resize: none;
+  padding: 12px 13px;
+  line-height: 1.45;
+}
+
+.community-compose-submit {
+  min-height: 46px;
+  border-radius: 14px;
+  background: #79c8a6;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
 }

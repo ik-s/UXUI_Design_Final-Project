@@ -27,7 +27,7 @@ export type ManualMapLocation = Coordinates & {
   provider: "kakao";
 };
 
-export type SearchRadiusMeters = 500 | 1000 | 2000 | 3000;
+export type SearchRadiusMeters = 500 | 1000 | 3000 | 5000;
 
 export type ConversationSource = "home" | "community" | "friend";
 

@@ -14,8 +14,8 @@ const DEFAULT_CENTER: Coordinates = {
 const radiusOptions: Array<{ label: string; value: SearchRadiusMeters }> = [
   { label: "500m", value: 500 },
   { label: "1km", value: 1000 },
-  { label: "2km", value: 2000 },
   { label: "3km", value: 3000 },
+  { label: "5km", value: 5000 },
 ];
 
 type SdkStatus = "missing_key" | "loading" | "ready" | "failed";
@@ -32,7 +32,7 @@ export function KakaoLocationPicker({ initialCoordinates, onSubmit }: KakaoLocat
   const [selectedCoordinates, setSelectedCoordinates] = useState<Coordinates>(
     initialCoordinates ?? DEFAULT_CENTER,
   );
-  const [radiusMeters, setRadiusMeters] = useState<SearchRadiusMeters | "">("");
+  const [radiusMeters, setRadiusMeters] = useState<SearchRadiusMeters | "">(1000);
   const [address, setAddress] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
   const [geoError, setGeoError] = useState("");
