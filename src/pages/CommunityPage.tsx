@@ -1,16 +1,12 @@
-import { useRef, useState, type FormEvent, type PointerEvent } from "react";
-import {
-  MessageCircle,
-  Send,
-  ThumbsUp,
-  ArrowLeft,
-} from "lucide-react";
-import { communityPosts } from "../data/appData";
+import { useMemo, useState, type FormEvent } from "react";
+import { ArrowLeft, MessageCircle, Send, ThumbsUp } from "lucide-react";
 import { UserAvatar } from "../components/UserAvatar";
+import { communityCategories, communityPosts } from "../data/appData";
 import { useLocalStorageState } from "../hooks/useLocalStorageState";
 import type { ConversationPartner } from "../types";
 
 type CommunityPost = (typeof communityPosts)[number];
+type CommunityCategory = (typeof communityCategories)[number];
 
 type CommunityComment = {
   author: string;
@@ -37,14 +33,19 @@ export function CommunityPage({
 }: CommunityPageProps) {
   const [view, setView] = useState<"list" | "detail">("list");
   const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
-  const [isCategoryDragging, setIsCategoryDragging] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<CommunityCategory>("전체");
   const [comments, setComments] = useLocalStorageState<CommunityComment[]>(
     "mojiday:communityComments",
     [],
   );
-  const categoryRowRef = useRef<HTMLDivElement>(null);
-  const categoryDragRef = useRef({ active: false, scrollLeft: 0, startX: 0 });
   const currentNeighborhood = getNeighborhoodName(neighborhood);
+
+  const visiblePosts = useMemo(() => {
+    if (selectedCategory === "전체") return communityPosts;
+    if (selectedCategory === "인기") return communityPosts.filter((post) => post.popular);
+    return communityPosts.filter((post) => post.category === selectedCategory);
+  }, [selectedCategory]);
+
   const addComment = (post: CommunityPost, body: string, anonymous: boolean) => {
     const trimmed = body.trim();
     if (!trimmed) return;
@@ -59,35 +60,6 @@ export function CommunityPage({
         postKey: getPostKey(post),
       },
     ]);
-  };
-
-  const handleCategoryPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    const row = categoryRowRef.current;
-    if (!row) return;
-
-    categoryDragRef.current = {
-      active: true,
-      scrollLeft: row.scrollLeft,
-      startX: event.clientX,
-    };
-    row.setPointerCapture(event.pointerId);
-    setIsCategoryDragging(true);
-  };
-
-  const handleCategoryPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    const row = categoryRowRef.current;
-    const drag = categoryDragRef.current;
-    if (!row || !drag.active) return;
-
-    event.preventDefault();
-    row.scrollLeft = drag.scrollLeft - (event.clientX - drag.startX);
-  };
-
-  const stopCategoryDrag = (event: PointerEvent<HTMLDivElement>) => {
-    const row = categoryRowRef.current;
-    categoryDragRef.current.active = false;
-    row?.releasePointerCapture(event.pointerId);
-    setIsCategoryDragging(false);
   };
 
   if (view === "detail" && selectedPost) {
@@ -112,24 +84,30 @@ export function CommunityPage({
           <MessageCircle size={22} />
         </button>
       </header>
-      <div
-        ref={categoryRowRef}
-        className={`category-row${isCategoryDragging ? " dragging" : ""}`}
-        onPointerDown={handleCategoryPointerDown}
-        onPointerLeave={stopCategoryDrag}
-        onPointerMove={handleCategoryPointerMove}
-        onPointerUp={stopCategoryDrag}
-      >
-        {["인기 🔥", "벌레 퇴치 요청", "동네질문", "동네맛집", "동네병원 추천", "고민 상담"].map(
-          (category, index) => (
-            <button className={index === 0 ? "active" : ""} key={category}>
-              {category}
-            </button>
-          ),
-        )}
+      <div className="category-row">
+        {communityCategories.map((category) => (
+          <button
+            className={selectedCategory === category ? "active" : ""}
+            key={category}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              setSelectedCategory(category);
+            }}
+            onMouseDown={(event) => {
+              event.stopPropagation();
+              setSelectedCategory(category);
+            }}
+            onClick={(event) => {
+              event.stopPropagation();
+              setSelectedCategory(category);
+            }}
+          >
+            {category}
+          </button>
+        ))}
       </div>
       <section className="post-list">
-        {communityPosts.map((post) => (
+        {visiblePosts.map((post) => (
           <button
             className="post-card"
             key={post.title}
@@ -139,9 +117,7 @@ export function CommunityPage({
             }}
           >
             <span className="post-tag">{post.tag}</span>
-            <h2>
-              {post.accent && <em>{post.accent}</em>} {post.title}
-            </h2>
+            <h2>{post.title}</h2>
             {post.body && <p>{post.body}</p>}
             <div className="post-meta">
               <span>{post.meta} · {post.statusEmoji}</span>
@@ -175,7 +151,7 @@ function PostDetailView({
   post: CommunityPost;
   onBack: () => void;
 }) {
-  const author = post.meta.split("·")[0]?.trim() || "익명";
+  const author = post.author || post.meta.split("·")[0]?.trim() || "익명";
   const [commentBody, setCommentBody] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(true);
 
@@ -195,7 +171,7 @@ function PostDetailView({
           <strong>{post.tag}</strong>
           <span>{neighborhood}</span>
         </div>
-        <button aria-label="대화 알림" onClick={onOpenChatList}>
+        <button aria-label="대화 열림" onClick={onOpenChatList}>
           <MessageCircle size={22} />
         </button>
       </header>
@@ -210,7 +186,7 @@ function PostDetailView({
         </section>
 
         <strong className="post-detail-title">{post.title}</strong>
-        {post.body && <p>{post.body.replace("... 더보기", "")}</p>}
+        {post.body && <p>{post.body}</p>}
 
         <div className="post-detail-actions">
           <button>
@@ -272,7 +248,7 @@ function PostDetailView({
         <input
           value={commentBody}
           onChange={(event) => setCommentBody(event.target.value)}
-          placeholder="댓글을 입력하세요."
+          placeholder="댓글을 입력하세요"
         />
         <button type="submit" aria-label="댓글 보내기">
           <Send size={22} />
@@ -283,7 +259,7 @@ function PostDetailView({
 }
 
 function getNeighborhoodName(neighborhood: string) {
-  return neighborhood || "동네명";
+  return neighborhood || "동네 미설정";
 }
 
 function getPostKey(post: CommunityPost) {

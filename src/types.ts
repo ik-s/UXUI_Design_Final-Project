@@ -31,7 +31,7 @@ export type SearchRadiusMeters = 500 | 1000 | 2000 | 3000;
 
 export type ConversationSource = "home" | "community" | "friend";
 
-export type HelpRequestStatus = "idle" | "requested" | "completed";
+export type HelpRequestStatus = "idle" | "requested" | "completionPending" | "completed";
 
 export type ConversationPartner = {
   avatar?: string;
@@ -77,4 +77,14 @@ export type GuideStep = {
   id: string;
   preview: "status" | "neighbors" | "map" | "community" | "profile";
   title: string;
+};
+
+export type StatusHistoryItem = {
+  createdAt: string;
+  date: string;
+  emoji: string;
+  id: string;
+  label: string;
+  message: string;
+  point: number;
 };

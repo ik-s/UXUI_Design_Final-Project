@@ -1,9 +1,9 @@
 import { useRef, useState, type ReactNode } from "react";
-import { Award, Camera, ChevronRight, Store, Users, X } from "lucide-react";
+import { Award, CalendarDays, Camera, ChevronRight, Store, Users, X } from "lucide-react";
 import { UserAvatar } from "../components/UserAvatar";
 import { praiseBadges, profileStats, recentHelpHistory } from "../data/appData";
 import { useLocalStorageState } from "../hooks/useLocalStorageState";
-import type { ConversationPartner, ProfileView } from "../types";
+import type { ConversationPartner, ProfileView, StatusHistoryItem } from "../types";
 import { FriendListPage } from "./FriendListPage";
 import { PointShopPage } from "./PointShopPage";
 
@@ -11,13 +11,18 @@ type ProfilePageProps = {
   nickname: string;
   onFriendAdded?: (friendName: string) => void;
   onNicknameChange: (value: string) => void;
-  onOpenFriendConversation?: (friend: ConversationPartner) => void;
+  onOpenFriendConversation?: (
+    friend: ConversationPartner,
+    contextLabel?: string,
+    seedMessage?: string,
+  ) => void;
   onPointExchange?: (giftName: string, point: number) => void;
   onProfileImageChange: (value: string) => void;
   onProfileViewChange: (view: ProfileView) => void;
   profileImage: string;
   profileView: ProfileView;
   neighborhood: string;
+  statusHistory: StatusHistoryItem[];
 };
 
 export function ProfilePage({
@@ -31,12 +36,14 @@ export function ProfilePage({
   profileImage,
   profileView,
   neighborhood,
+  statusHistory,
 }: ProfilePageProps) {
   const [helpHistory] = useLocalStorageState("mojiday:helpHistory", recentHelpHistory);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingNickname, setEditingNickname] = useState(nickname);
   const [editingProfileImage, setEditingProfileImage] = useState(profileImage);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recentStatusDays = buildRecentStatusDays(statusHistory);
 
   const openProfileEdit = () => {
     setEditingNickname(nickname);
@@ -90,7 +97,7 @@ export function ProfilePage({
         <UserAvatar size="medium" src={profileImage} />
         <div>
           <strong>{nickname}</strong>
-          <p>{neighborhood || "위치"} #유저고유태그</p>
+          <p>{neighborhood || "위치 미설정"} #상태공유</p>
         </div>
         <button className="profile-edit-trigger" aria-label="프로필 수정" onClick={openProfileEdit}>
           <ChevronRight size={28} />
@@ -117,12 +124,12 @@ export function ProfilePage({
           </div>
           <div className="temperature-main">
             <strong>{profileStats.helpTemperature.toFixed(1)}°C</strong>
-            <p>도움을 주고받을수록 온도가 올라가요.</p>
+            <p>도움을 주고받을수록 온도와 기록이 함께 쌓여요.</p>
           </div>
           <div className="temperature-metrics">
             <span>
               <b>{profileStats.helpedCount}회</b>
-              도와준 횟수
+              도움 준 횟수
             </span>
             <span>
               <b>{profileStats.receivedHelpCount}회</b>
@@ -161,6 +168,37 @@ export function ProfilePage({
               <span key={badge}>{badge}</span>
             ))}
           </div>
+        </section>
+
+        <section className="status-calendar-section">
+          <div className="profile-section-heading">
+            <strong>감정 기록 달력</strong>
+            <span>최근 2주</span>
+          </div>
+          <div className="status-calendar-grid" aria-label="최근 감정 기록">
+            {recentStatusDays.map((day) => (
+              <article className={day.entry ? "has-entry" : ""} key={day.date}>
+                <span>{day.label}</span>
+                <strong>{day.entry?.emoji || "·"}</strong>
+                <p>{day.entry?.label || "기록 없음"}</p>
+              </article>
+            ))}
+          </div>
+          {statusHistory[0] ? (
+            <div className="latest-status-note">
+              <CalendarDays size={18} />
+              <p>
+                최근 기록: <b>{statusHistory[0].emoji} {statusHistory[0].label}</b>
+                <br />
+                {statusHistory[0].message}
+              </p>
+            </div>
+          ) : (
+            <div className="latest-status-note">
+              <CalendarDays size={18} />
+              <p>홈에서 오늘 상태를 남기면 이곳에 기록돼요.</p>
+            </div>
+          )}
         </section>
       </section>
 
@@ -226,4 +264,33 @@ function ProfileAction({
       {label}
     </button>
   );
+}
+
+function buildRecentStatusDays(statusHistory: StatusHistoryItem[]) {
+  const byDate = new Map(statusHistory.map((item) => [item.date, item]));
+  const today = new Date();
+
+  return Array.from({ length: 14 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (13 - index));
+    const key = toDateKey(date);
+
+    return {
+      date: key,
+      entry: byDate.get(key),
+      label: formatDayLabel(date),
+    };
+  });
+}
+
+function toDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function formatDayLabel(date: Date) {
+  return `${date.getMonth() + 1}/${date.getDate()}`;
 }

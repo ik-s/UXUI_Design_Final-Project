@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { ArrowLeft, CheckCircle2, HeartHandshake, Send } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Send } from "lucide-react";
 import { UserAvatar } from "../components/UserAvatar";
 import type { Conversation } from "../types";
 
@@ -7,7 +7,6 @@ type ChatRoomPageProps = {
   conversation: Conversation;
   onBack: () => void;
   onCompleteHelp: (conversationId: string) => void;
-  onRequestHelp: (conversationId: string) => void;
   onSendMessage: (conversationId: string, text: string) => void;
 };
 
@@ -15,7 +14,6 @@ export function ChatRoomPage({
   conversation,
   onBack,
   onCompleteHelp,
-  onRequestHelp,
   onSendMessage,
 }: ChatRoomPageProps) {
   const [message, setMessage] = useState("");
@@ -28,6 +26,9 @@ export function ChatRoomPage({
     onSendMessage(conversation.id, trimmed);
     setMessage("");
   };
+
+  const helpActionLabel = getHelpActionLabel(conversation);
+  const isHelpCompleted = conversation.helpStatus === "completed";
 
   return (
     <div className="chat-room-screen tab-screen">
@@ -44,30 +45,26 @@ export function ChatRoomPage({
 
       <section className="chat-context-card">
         <div>
-          <span>{conversation.partner.statusEmoji || "🙂"}</span>
-          <strong>{conversation.contextLabel || "부담 없이 도움을 이어가요"}</strong>
-          <p>{helpStatusCopy[conversation.helpStatus]}</p>
+          <span>{conversation.partner.statusEmoji || "💬"}</span>
+          <div>
+            <strong>{conversation.contextLabel || "부담 없이 도움을 이어가요"}</strong>
+            <p>{helpStatusCopy[conversation.helpStatus]}</p>
+          </div>
         </div>
         <div className="chat-help-actions">
           <button
-            disabled={conversation.helpStatus !== "idle"}
-            onClick={() => onRequestHelp(conversation.id)}
-          >
-            <HeartHandshake size={17} />
-            도움 요청
-          </button>
-          <button
-            disabled={conversation.helpStatus === "completed"}
+            className="help-completion-button"
+            disabled={isHelpCompleted}
             onClick={() => onCompleteHelp(conversation.id)}
           >
             <CheckCircle2 size={17} />
-            도움 완료
+            {helpActionLabel}
           </button>
         </div>
       </section>
 
       <section className="chat-message-list" aria-label="대화 메시지">
-        {conversation.messages.filter(shouldShowMessage).map((chatMessage) => (
+        {conversation.messages.map((chatMessage) => (
           <article className={`chat-message chat-message-${chatMessage.sender}`} key={chatMessage.id}>
             <p>{chatMessage.text}</p>
             {chatMessage.sender !== "system" && <time>{formatMessageTime(chatMessage.createdAt)}</time>}
@@ -79,7 +76,7 @@ export function ChatRoomPage({
         <input
           value={message}
           onChange={(event) => setMessage(event.target.value)}
-          placeholder="메시지를 입력하세요."
+          placeholder="메시지를 입력하세요"
         />
         <button type="submit" aria-label="메시지 보내기">
           <Send size={22} />
@@ -89,17 +86,22 @@ export function ChatRoomPage({
   );
 }
 
-function shouldShowMessage(message: Conversation["messages"][number]) {
-  if (message.sender !== "partner") return true;
-
-  return !/님과 대화를 시작했어요\.$/.test(message.text);
-}
-
 const helpStatusCopy: Record<Conversation["helpStatus"], string> = {
-  completed: "도움이 완료되어 포인트와 활동 내역에 기록됐어요.",
-  idle: "상황을 먼저 이야기한 뒤 도움 요청을 보낼 수 있어요.",
-  requested: "도움 요청이 전송됐어요. 대화로 필요한 내용을 이어가세요.",
+  completed: "도움이 완료되어 포인트와 도움 온도 기록에 반영됐어요.",
+  completionPending: "내가 도움 완료를 보냈어요. 이제 상대 확인을 기다리는 중이에요.",
+  idle: "대화로 필요한 도움을 주고받은 뒤 완료만 기록하면 돼요.",
+  requested: "이전 도움 요청 대화예요. 도움을 마쳤다면 완료를 눌러 상대 확인으로 넘겨주세요.",
 };
+
+function getHelpActionLabel(conversation: Conversation) {
+  if (conversation.helpStatus === "completionPending") {
+    return `${conversation.partner.name} 확인 완료`;
+  }
+
+  if (conversation.helpStatus === "completed") return "도움 완료됨";
+
+  return "도움 완료";
+}
 
 function formatMessageTime(value: string) {
   const date = new Date(value);

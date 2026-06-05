@@ -187,7 +187,7 @@
 
 .chat-help-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 8px;
 }
 
@@ -208,6 +208,10 @@
   color: #a8b4ba;
   background: #eef2f1;
   cursor: default;
+}
+
+.help-completion-button {
+  width: 100%;
 }
 
 .chat-message-list {

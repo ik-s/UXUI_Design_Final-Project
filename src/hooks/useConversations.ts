@@ -35,7 +35,7 @@ export function useConversations() {
                 ...conversation,
                 contextLabel: contextLabel ?? conversation.contextLabel,
                 unreadCount: 0,
-            }
+              }
             : conversation,
         ),
       );
@@ -88,29 +88,6 @@ export function useConversations() {
     );
   };
 
-  const requestHelp = (conversationId: string) => {
-    setConversations((currentConversations) =>
-      currentConversations.map((conversation) => {
-        if (conversation.id !== conversationId || conversation.helpStatus !== "idle") {
-          return conversation;
-        }
-
-        const message = createMessage(
-          "system",
-          "도움 요청을 보냈어요. 상대가 부담 없이 확인할 수 있도록 대화로 상황을 남겨주세요.",
-        );
-
-        return {
-          ...conversation,
-          helpStatus: "requested",
-          lastMessage: message.text,
-          lastMessageAt: message.createdAt,
-          messages: [...conversation.messages, message],
-        };
-      }),
-    );
-  };
-
   const completeHelp = (conversationId: string) => {
     setConversations((currentConversations) =>
       currentConversations.map((conversation) => {
@@ -118,14 +95,18 @@ export function useConversations() {
           return conversation;
         }
 
+        const nextStatus =
+          conversation.helpStatus === "completionPending" ? "completed" : "completionPending";
         const message = createMessage(
           "system",
-          "도움이 완료됐어요. 작은 도움이 포인트와 도움 온도로 기록됩니다.",
+          nextStatus === "completed"
+            ? "상대 확인까지 완료됐어요. 양쪽 포인트와 도움 온도에 기록됩니다."
+            : "도움 준 사람이 완료를 보냈어요. 이제 도움 받은 사람이 확인하면 기록됩니다.",
         );
 
         return {
           ...conversation,
-          helpStatus: "completed",
+          helpStatus: nextStatus,
           lastMessage: message.text,
           lastMessageAt: message.createdAt,
           messages: [...conversation.messages, message],
@@ -146,7 +127,6 @@ export function useConversations() {
     completeHelp,
     conversations,
     markConversationRead,
-    requestHelp,
     sendMessage,
     startConversation,
   };

@@ -203,7 +203,8 @@
 
 .help-temperature-card,
 .help-history-section,
-.praise-badge-section {
+.praise-badge-section,
+.status-calendar-section {
   border: 1px solid #e0eee8;
   border-radius: 18px;
   background: #fff;
@@ -281,7 +282,8 @@
 }
 
 .help-history-section,
-.praise-badge-section {
+.praise-badge-section,
+.status-calendar-section {
   padding: 15px;
 }
 
@@ -338,6 +340,76 @@
   color: #3e9872;
   font-size: 12px;
   font-weight: 900;
+}
+
+.status-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.status-calendar-grid article {
+  display: grid;
+  min-width: 0;
+  min-height: 72px;
+  align-content: center;
+  justify-items: center;
+  gap: 3px;
+  border: 1px solid #edf2ef;
+  border-radius: 12px;
+  background: #f8fbf9;
+  text-align: center;
+}
+
+.status-calendar-grid article.has-entry {
+  border-color: #cdeadd;
+  background: #eefaf4;
+}
+
+.status-calendar-grid span {
+  color: #8a9399;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.status-calendar-grid strong {
+  font-size: 21px;
+  line-height: 1;
+}
+
+.status-calendar-grid p {
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: #65727b;
+  font-size: 9px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.latest-status-note {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 9px;
+  margin-top: 13px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #f8fbf9;
+  color: #4f9d7b;
+}
+
+.latest-status-note p {
+  margin: 0;
+  color: #65727b;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 800;
+}
+
+.latest-status-note b {
+  color: #30363a;
 }
 
 .point-shop-screen {
@@ -845,7 +917,7 @@
 
 .friend-card {
   display: grid;
-  grid-template-columns: 50px 1fr 34px 62px;
+  grid-template-columns: 50px 1fr 34px 34px 62px;
   align-items: center;
   gap: 11px;
   padding: 13px;
@@ -909,6 +981,17 @@
   color: #65727b;
 }
 
+.friend-card > .friend-care-button {
+  background: #f4faf7;
+  color: #4aa77f;
+}
+
+.friend-card > .friend-care-button:disabled {
+  background: #f4f5f5;
+  color: #c4cdca;
+  cursor: default;
+}
+
 .friend-card > .friend-chat-button {
   display: flex;
   width: auto;
@@ -958,6 +1041,7 @@
 
 .friend-add-sheet,
 .visibility-sheet,
+.friend-care-sheet,
 .friend-menu-sheet,
 .friend-confirm-sheet {
   border-radius: 24px;
@@ -974,7 +1058,8 @@
 }
 
 .friend-add-sheet header,
-.visibility-sheet header {
+.visibility-sheet header,
+.friend-care-sheet header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -982,14 +1067,16 @@
 }
 
 .friend-add-sheet header strong,
-.visibility-sheet header strong {
+.visibility-sheet header strong,
+.friend-care-sheet header strong {
   color: #30363a;
   font-size: 18px;
   font-weight: 900;
 }
 
 .friend-add-sheet header button,
-.visibility-sheet header > button {
+.visibility-sheet header > button,
+.friend-care-sheet header button {
   display: grid;
   place-items: center;
   width: 32px;
@@ -1086,10 +1173,45 @@
   padding: 18px;
 }
 
-.visibility-sheet header p {
+.visibility-sheet header p,
+.friend-care-sheet header p {
   margin: 5px 0 0;
   color: #7b838a;
   font-size: 12px;
+  font-weight: 800;
+}
+
+.friend-care-sheet {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.friend-care-place {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid #dfe8e3;
+  border-radius: 16px;
+  background: #f8fbf9;
+}
+
+.friend-care-place svg {
+  color: #4f9d7b;
+}
+
+.friend-care-place strong {
+  color: #30363a;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.friend-care-place p {
+  margin: 4px 0 0;
+  color: #7b838a;
+  font-size: 12px;
+  line-height: 1.4;
   font-weight: 800;
 }
 

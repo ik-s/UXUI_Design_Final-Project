@@ -2,12 +2,14 @@ import { useMemo, useState } from "react";
 import {
   ArrowLeft,
   Check,
+  Hospital,
   LockKeyhole,
+  MapPin,
+  MessageCircle,
   MoreHorizontal,
   Plus,
   Search,
   ShieldCheck,
-  MessageCircle,
   Trash2,
   UserPlus,
   X,
@@ -24,6 +26,7 @@ type Friend = {
   id: number;
   locationLabel?: string;
   name: string;
+  nearbyCare?: string;
   statusMessage: string;
   userTag: string;
   visibilityLevel: VisibilityLevel;
@@ -39,7 +42,11 @@ type FriendListState = {
 type FriendListPageProps = {
   onFriendAdded?: (friendName: string) => void;
   onBack: () => void;
-  onOpenConversation?: (friend: ConversationPartner) => void;
+  onOpenConversation?: (
+    friend: ConversationPartner,
+    contextLabel?: string,
+    seedMessage?: string,
+  ) => void;
 };
 
 const visibilityCopy: Record<VisibilityLevel, string> = {
@@ -68,6 +75,7 @@ export function FriendListPage({
   const [selectedVisibility, setSelectedVisibility] = useState<VisibilityLevel>("status");
   const [menuFriend, setMenuFriend] = useState<Friend | null>(null);
   const [deleteFriend, setDeleteFriend] = useState<Friend | null>(null);
+  const [careFriend, setCareFriend] = useState<Friend | null>(null);
   const [toastMessage, setToastMessage] = useState("");
 
   const currentVisibilityLabel = visibilityCopy[friendState.defaultFriendVisibility];
@@ -93,6 +101,7 @@ export function FriendListPage({
     const nextFriend: Friend = {
       ...pendingAddUser,
       locationLabel: "친구가 설정한 위치",
+      nearbyCare: "가까운 의원 · 도보 7분",
       visibilityLevel: friendState.defaultFriendVisibility,
     };
 
@@ -104,7 +113,7 @@ export function FriendListPage({
     setShowAddPanel(false);
     setQuery("");
     onFriendAdded?.(nextFriend.name);
-    saveToast("친구로 추가했어요.");
+    saveToast("친구로 추가됐어요.");
   };
 
   const openVisibilitySheet = (friend: Friend) => {
@@ -125,7 +134,7 @@ export function FriendListPage({
       ),
     });
     setEditingFriend(null);
-    saveToast("공개 범위가 저장되었어요.");
+    saveToast("공개 범위가 저장됐어요.");
   };
 
   const removeFriend = () => {
@@ -137,7 +146,7 @@ export function FriendListPage({
     });
     setDeleteFriend(null);
     setMenuFriend(null);
-    saveToast("친구 목록에서 삭제했어요.");
+    saveToast("친구 목록에서 삭제됐어요.");
   };
 
   const hideFriend = (friendToHide: Friend) => {
@@ -159,7 +168,25 @@ export function FriendListPage({
       ...friendState,
       defaultFriendVisibility: nextOption.value,
     });
-    saveToast("기본 공개 범위가 변경되었어요.");
+    saveToast("기본 공개 범위가 변경됐어요.");
+  };
+
+  const openFriendConversation = (
+    friend: Friend,
+    contextLabel = friend.statusMessage,
+    seedMessage?: string,
+  ) => {
+    onOpenConversation?.(toConversationPartner(friend), contextLabel, seedMessage);
+  };
+
+  const openCareModal = (friend: Friend) => {
+    setMenuFriend(null);
+    setCareFriend(friend);
+  };
+
+  const shareCareInChat = (friend: Friend) => {
+    openFriendConversation(friend, "근처 도움 장소 안내");
+    setCareFriend(null);
   };
 
   return (
@@ -171,7 +198,7 @@ export function FriendListPage({
         </button>
         <div>
           <strong>친구 목록</strong>
-          <span>직접 추가한 친구에게만 더 자세한 상태를 공유할 수 있어요.</span>
+          <span>친구에게 내 상태와 위치를 어디까지 공개할지 직접 정할 수 있어요.</span>
         </div>
         <button aria-label="친구 추가" onClick={() => setShowAddPanel(true)}>
           <Plus size={24} />
@@ -183,7 +210,7 @@ export function FriendListPage({
         <div>
           <strong>내 친구 {friendState.friends.length}명</strong>
           <p>친구에게 공개 중인 정보: {currentVisibilityLabel}</p>
-          <span>이웃에게는 최소 정보만, 친구에게는 내가 선택한 정보만 보여줘요.</span>
+          <span>친구 관계에서도 위치 공개 여부는 내가 선택한 범위 안에서만 적용돼요.</span>
         </div>
       </section>
 
@@ -208,39 +235,42 @@ export function FriendListPage({
       </section>
 
       <section className="friend-card-list">
-        {friendState.friends.map((friend) => (
-          <article className="friend-card" key={friend.id}>
-            <span className="friend-avatar">{friend.avatar}</span>
-            <div>
-              <strong>{friend.name}</strong>
-              <small>{friend.userTag}</small>
-              <p>
-                {friend.currentMood} {friend.statusMessage}
-              </p>
-              <em>공개 범위: {visibilityCopy[friend.visibilityLevel]}</em>
-            </div>
-            <button aria-label={`${friend.name} 친구 메뉴`} onClick={() => setMenuFriend(friend)}>
-              <MoreHorizontal size={22} />
-            </button>
-            <button
-              className="friend-chat-button"
-              onClick={() =>
-                onOpenConversation?.({
-                  avatar: friend.avatar,
-                  id: `friend-${friend.id}`,
-                  locationLabel: friend.locationLabel,
-                  name: friend.name,
-                  statusEmoji: friend.currentMood,
-                  statusLabel: friend.statusMessage,
-                  userTag: friend.userTag,
-                })
-              }
-            >
-              <MessageCircle size={16} />
-              대화
-            </button>
-          </article>
-        ))}
+        {friendState.friends.map((friend) => {
+          const canShowCare = canShowCarePlace(friend);
+
+          return (
+            <article className="friend-card" key={friend.id}>
+              <span className="friend-avatar">{friend.avatar}</span>
+              <div>
+                <strong>{friend.name}</strong>
+                <small>{friend.userTag}</small>
+                <p>
+                  {friend.currentMood} {friend.statusMessage}
+                </p>
+                <em>공개 범위: {visibilityCopy[friend.visibilityLevel]}</em>
+                {canShowCare && <small>{friend.locationLabel} · {friend.nearbyCare}</small>}
+              </div>
+              <button aria-label={`${friend.name} 친구 메뉴`} onClick={() => setMenuFriend(friend)}>
+                <MoreHorizontal size={22} />
+              </button>
+              <button
+                className="friend-care-button"
+                disabled={!canShowCare}
+                aria-label={`${friend.name} 주변 도움 장소`}
+                onClick={() => openCareModal(friend)}
+              >
+                <Hospital size={18} />
+              </button>
+              <button
+                className="friend-chat-button"
+                onClick={() => openFriendConversation(friend)}
+              >
+                <MessageCircle size={16} />
+                대화
+              </button>
+            </article>
+          );
+        })}
       </section>
 
       {showAddPanel && (
@@ -287,7 +317,7 @@ export function FriendListPage({
               ) : (
                 <div className="friend-empty-state">
                   <UserPlus size={38} />
-                  <strong>찾는 친구가 없어요.</strong>
+                  <strong>찾는 친구가 없어요</strong>
                   <p>닉네임이나 유저태그를 다시 확인해 주세요.</p>
                 </div>
               )}
@@ -312,7 +342,7 @@ export function FriendListPage({
           <section className="visibility-sheet" role="dialog" aria-modal="true">
             <header>
               <div>
-                <strong>{editingFriend.name}에게 보여줄 정보</strong>
+                <strong>{editingFriend.name}님에게 보여줄 정보</strong>
                 <p>친구에게도 내가 선택한 정보만 공개돼요.</p>
               </div>
               <button aria-label="공개 범위 닫기" onClick={() => setEditingFriend(null)}>
@@ -335,10 +365,36 @@ export function FriendListPage({
               ))}
             </div>
             <p className="visibility-warning">
-              상세 주소는 가까운 친구에게만 공개하는 것을 추천해요.
+              상세 위치는 가까운 친구에게만 공개하는 것을 추천해요.
             </p>
             <button className="visibility-save-button" onClick={saveVisibility}>
               저장하기
+            </button>
+          </section>
+        </div>
+      )}
+
+      {careFriend && (
+        <div className="friend-modal-backdrop" role="presentation">
+          <section className="friend-care-sheet" role="dialog" aria-modal="true">
+            <header>
+              <div>
+                <strong>{careFriend.name}님 주변 도움 장소</strong>
+                <p>{careFriend.locationLabel}</p>
+              </div>
+              <button aria-label="도움 장소 닫기" onClick={() => setCareFriend(null)}>
+                <X size={20} />
+              </button>
+            </header>
+            <div className="friend-care-place">
+              <MapPin size={20} />
+              <div>
+                <strong>{careFriend.nearbyCare}</strong>
+                <p>친구에게 위치가 공개된 범위 안에서만 안내돼요.</p>
+              </div>
+            </div>
+            <button className="visibility-save-button" onClick={() => shareCareInChat(careFriend)}>
+              채팅으로 알려주기
             </button>
           </section>
         </div>
@@ -350,20 +406,18 @@ export function FriendListPage({
             <strong>{menuFriend.name}</strong>
             <button
               onClick={() => {
-                onOpenConversation?.({
-                  avatar: menuFriend.avatar,
-                  id: `friend-${menuFriend.id}`,
-                  locationLabel: menuFriend.locationLabel,
-                  name: menuFriend.name,
-                  statusEmoji: menuFriend.currentMood,
-                  statusLabel: menuFriend.statusMessage,
-                  userTag: menuFriend.userTag,
-                });
+                openFriendConversation(menuFriend);
                 setMenuFriend(null);
               }}
             >
               대화하기
             </button>
+            {canShowCarePlace(menuFriend) && (
+              <button onClick={() => openCareModal(menuFriend)}>
+                <Hospital size={17} />
+                주변 도움 장소 보기
+              </button>
+            )}
             <button onClick={() => openVisibilitySheet(menuFriend)}>공개 범위 설정</button>
             <button onClick={() => hideFriend(menuFriend)}>친구 숨기기</button>
             <button
@@ -422,4 +476,23 @@ function ConfirmDialog({
       </section>
     </div>
   );
+}
+
+function canShowCarePlace(friend: Friend) {
+  return Boolean(
+    friend.nearbyCare &&
+      (friend.visibilityLevel === "roughLocation" || friend.visibilityLevel === "detailLocation"),
+  );
+}
+
+function toConversationPartner(friend: Friend): ConversationPartner {
+  return {
+    avatar: friend.avatar,
+    id: `friend-${friend.id}`,
+    locationLabel: friend.locationLabel,
+    name: friend.name,
+    statusEmoji: friend.currentMood,
+    statusLabel: friend.statusMessage,
+    userTag: friend.userTag,
+  };
 }

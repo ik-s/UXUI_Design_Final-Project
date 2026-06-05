@@ -12,26 +12,38 @@ type HelpHistoryItem = (typeof recentHelpHistory)[number];
 
 export function grantHelpCompletionReward(partnerName: string, point = 10) {
   try {
-    const pointState = readPointState();
-    window.localStorage.setItem(
-      POINT_SHOP_KEY,
-      JSON.stringify({
-        ...pointState,
-        userPoint: pointState.userPoint + point,
-      }),
-    );
+    addPoint(point);
 
     const nextHelpItem: HelpHistoryItem = {
-      icon: "🤝",
+      icon: "✅",
       id: Date.now(),
       point,
-      title: `${partnerName}님과의 도움을 완료했어요`,
+      title: `${partnerName}님과의 도움을 완료했어요.`,
     };
     const history = readHelpHistory();
     window.localStorage.setItem(HELP_HISTORY_KEY, JSON.stringify([nextHelpItem, ...history]));
   } catch {
-    // localStorage를 사용할 수 없는 환경에서는 현재 세션의 대화 상태만 유지합니다.
+    // localStorage를 사용할 수 없는 환경에서는 현재 세션 상태만 유지합니다.
   }
+}
+
+export function grantStatusCheckInReward(point = 10) {
+  try {
+    addPoint(point);
+  } catch {
+    // localStorage를 사용할 수 없는 환경에서는 보상을 건너뜁니다.
+  }
+}
+
+function addPoint(point: number) {
+  const pointState = readPointState();
+  window.localStorage.setItem(
+    POINT_SHOP_KEY,
+    JSON.stringify({
+      ...pointState,
+      userPoint: pointState.userPoint + point,
+    }),
+  );
 }
 
 function readPointState(): StoredPointShopState {

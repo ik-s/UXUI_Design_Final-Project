@@ -1,11 +1,9 @@
 import { useMemo, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { BottomTabs } from "./components/BottomTabs";
-import { HomeIndicator } from "./components/HomeIndicator";
-import { StatusBar } from "./components/StatusBar";
-import { onboardingOrder } from "./data/appData";
-import { useLocalStorageState } from "./hooks/useLocalStorageState";
+import { onboardingOrder, statusHistorySeed } from "./data/appData";
 import { useConversations } from "./hooks/useConversations";
+import { useLocalStorageState } from "./hooks/useLocalStorageState";
 import { useNotifications } from "./hooks/useNotifications";
 import { ChatListPage } from "./pages/ChatListPage";
 import { ChatRoomPage } from "./pages/ChatRoomPage";
@@ -19,8 +17,14 @@ import { PhonePage } from "./pages/PhonePage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ProfileSetupPage } from "./pages/ProfileSetupPage";
 import { StartPage } from "./pages/StartPage";
-import { grantHelpCompletionReward } from "./utils/activityStorage";
-import type { ConversationPartner, ConversationSource, ProfileView, Screen } from "./types";
+import { grantHelpCompletionReward, grantStatusCheckInReward } from "./utils/activityStorage";
+import type {
+  ConversationPartner,
+  ConversationSource,
+  ProfileView,
+  Screen,
+  StatusHistoryItem,
+} from "./types";
 
 const screensWithBack: Screen[] = ["location", "phone", "profileSetup", "guide"];
 
@@ -30,8 +34,16 @@ function App() {
   const [phone, setPhone] = useLocalStorageState("mojiday:phone", "");
   const [neighborhood, setNeighborhood] = useLocalStorageState("mojiday:neighborhood", "");
   const [profileImage, setProfileImage] = useLocalStorageState("mojiday:profileImage", "");
-  const [statusEmoji, setStatusEmoji] = useLocalStorageState("mojiday:statusEmoji", "🙂");
+  const [statusEmoji, setStatusEmoji] = useLocalStorageState("mojiday:statusEmoji", "😟");
   const [statusLabel, setStatusLabel] = useLocalStorageState("mojiday:statusLabel", "조금 불안해요");
+  const [statusMessage, setStatusMessage] = useLocalStorageState(
+    "mojiday:statusMessage",
+    "누군가 알고만 있어도 안심될 것 같아요.",
+  );
+  const [statusHistory, setStatusHistory] = useLocalStorageState<StatusHistoryItem[]>(
+    "mojiday:statusHistory",
+    statusHistorySeed,
+  );
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [chatReturnScreen, setChatReturnScreen] = useState<Screen>("chatList");
   const [profileView, setProfileView] = useState<ProfileView>("profile");
@@ -39,13 +51,14 @@ function App() {
     completeHelp,
     conversations,
     markConversationRead,
-    requestHelp,
     sendMessage,
     startConversation,
   } = useConversations();
   const { addNotification, markAllRead, notifications } = useNotifications();
 
   const canGoBack = screensWithBack.includes(screen);
+  const todayKey = getTodayKey();
+  const hasStatusEntryToday = statusHistory.some((item) => item.date === todayKey);
 
   const goNext = () => {
     const currentIndex = onboardingOrder.indexOf(screen);
@@ -94,12 +107,58 @@ function App() {
     const conversation = conversations.find((item) => item.id === conversationId);
     if (!conversation || conversation.helpStatus === "completed") return;
 
+    const shouldGrantReward = conversation.helpStatus === "completionPending";
     completeHelp(conversationId);
-    grantHelpCompletionReward(conversation.partner.name);
+
+    if (shouldGrantReward) {
+      grantHelpCompletionReward(conversation.partner.name);
+      addNotification({
+        body: `${conversation.partner.name}님과의 도움 완료가 확인되어 10P가 적립됐어요.`,
+        title: "도움 완료가 기록됐어요",
+        type: "help",
+      });
+      return;
+    }
+
     addNotification({
-      body: `${conversation.partner.name}님과의 도움이 완료되어 10P가 적립됐어요.`,
-      title: "도움 완료가 기록됐어요",
+      body: `${conversation.partner.name}님 확인이 끝나면 포인트와 도움 온도에 기록돼요.`,
+      title: "상대 확인을 기다리고 있어요",
       type: "help",
+    });
+  };
+
+  const saveStatus = (emoji: string, label: string, message: string) => {
+    const now = new Date().toISOString();
+    const alreadyRecordedToday = statusHistory.some((item) => item.date === todayKey);
+
+    setStatusEmoji(emoji);
+    setStatusLabel(label);
+    setStatusMessage(message);
+    setStatusHistory((currentHistory) => {
+      const hasToday = currentHistory.some((item) => item.date === todayKey);
+      const nextEntry: StatusHistoryItem = {
+        createdAt: now,
+        date: todayKey,
+        emoji,
+        id: `status-${todayKey}`,
+        label,
+        message,
+        point: hasToday ? 0 : 10,
+      };
+      const withoutToday = currentHistory.filter((item) => item.date !== todayKey);
+      return [nextEntry, ...withoutToday].slice(0, 60);
+    });
+
+    if (!alreadyRecordedToday) {
+      grantStatusCheckInReward(10);
+    }
+
+    addNotification({
+      body: alreadyRecordedToday
+        ? `${label} 상태로 오늘의 기록을 업데이트했어요.`
+        : `${label} 상태를 기록해 10P가 적립됐어요.`,
+      title: "상태가 기록됐어요",
+      type: "status",
     });
   };
 
@@ -134,24 +193,18 @@ function App() {
       case "home":
         return (
           <HomePage
-            nickname={nickname || "닉네임"}
+            nickname={nickname || "모지님"}
             neighborhood={neighborhood}
             profileImage={profileImage}
+            shouldPromptStatus={!hasStatusEntryToday}
             statusEmoji={statusEmoji}
             statusLabel={statusLabel}
+            statusMessage={statusMessage}
             onOpenConversation={(partner, contextLabel, seedMessage) =>
               openConversation(partner, "home", contextLabel, seedMessage, "home")
             }
             onOpenNotifications={() => setScreen("notification")}
-            onStatusChange={(emoji, label) => {
-              setStatusEmoji(emoji);
-              setStatusLabel(label);
-              addNotification({
-                body: `${label} 상태로 오늘의 안부를 남겼어요.`,
-                title: "상태가 기록됐어요",
-                type: "status",
-              });
-            }}
+            onStatusChange={saveStatus}
           />
         );
       case "map":
@@ -169,10 +222,11 @@ function App() {
       case "profile":
         return (
           <ProfilePage
-            nickname={nickname || "닉네임"}
+            nickname={nickname || "모지님"}
             profileImage={profileImage}
             neighborhood={neighborhood}
             profileView={profileView}
+            statusHistory={statusHistory}
             onNicknameChange={setNickname}
             onProfileImageChange={setProfileImage}
             onProfileViewChange={setProfileView}
@@ -183,9 +237,15 @@ function App() {
                 type: "friend",
               })
             }
-            onOpenFriendConversation={(friend) => {
+            onOpenFriendConversation={(friend, contextLabel, seedMessage) => {
               setProfileView("friends");
-              openConversation(friend, "friend", friend.statusLabel, undefined, "profile");
+              openConversation(
+                friend,
+                "friend",
+                contextLabel ?? friend.statusLabel,
+                seedMessage,
+                "profile",
+              );
             }}
             onPointExchange={(giftName, point) =>
               addNotification({
@@ -210,7 +270,6 @@ function App() {
             conversation={activeConversation}
             onBack={() => setScreen(chatReturnScreen)}
             onCompleteHelp={completeConversationHelp}
-            onRequestHelp={requestHelp}
             onSendMessage={sendMessage}
           />
         ) : (
@@ -233,21 +292,23 @@ function App() {
     activeConversation,
     chatReturnScreen,
     conversations,
+    hasStatusEntryToday,
     neighborhood,
     nickname,
     notifications,
     phone,
-    profileView,
     profileImage,
+    profileView,
     screen,
     statusEmoji,
+    statusHistory,
     statusLabel,
+    statusMessage,
   ]);
 
   return (
     <main className="app-shell">
       <section className="phone-frame">
-        <StatusBar />
         {canGoBack && (
           <button className="back-button" onClick={goBack} aria-label="뒤로가기">
             <ArrowLeft size={24} />
@@ -257,10 +318,18 @@ function App() {
         {["home", "map", "community", "profile"].includes(screen) && (
           <BottomTabs active={screen} onChange={setScreen} />
         )}
-        <HomeIndicator />
       </section>
     </main>
   );
+}
+
+function getTodayKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const date = String(now.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${date}`;
 }
 
 export default App;
