@@ -28,6 +28,17 @@ npm run dev
 
 기본 개발 서버는 Vite 설정에 따라 `http://localhost:5173`에서 실행됩니다.
 
+## 배포
+
+- Production URL: https://mojiday.vercel.app/
+- Platform: Vercel
+- Framework preset: Vite
+- Build command: `npm run build`
+- Output directory: `dist`
+- Install command: `npm install`
+
+Vercel 배포 설정은 [vercel.json](./vercel.json)에 정의되어 있습니다. `main` 브랜치에 push하면 Vercel Git Integration을 통해 배포가 갱신됩니다.
+
 ## 환경 변수
 
 프로젝트 루트에 `.env` 파일을 만들고 Kakao Maps JavaScript Key를 설정합니다.
@@ -36,7 +47,7 @@ npm run dev
 VITE_KAKAO_MAPS_JAVASCRIPT_KEY=your_kakao_javascript_key
 ```
 
-지도와 의료기관 검색은 Kakao Maps SDK의 `libraries=services`를 사용합니다. 키가 없거나 SDK 로드에 실패하면 프로토타입용 fallback 화면이 표시됩니다.
+지도와 의료기관 검색은 Kakao Maps SDK의 `libraries=services`를 사용합니다. 로컬 개발 환경과 Vercel Production/Preview 환경 모두에 같은 환경 변수가 필요합니다. 키가 없거나 SDK 로드에 실패하면 프로토타입용 fallback 화면이 표시됩니다.
 
 ## 스크립트
 
