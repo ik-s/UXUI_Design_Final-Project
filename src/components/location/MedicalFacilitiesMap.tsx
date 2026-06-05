@@ -22,7 +22,7 @@ type FacilityWithDistance = MedicalFacility & {
   distanceMeters: number;
 };
 
-type FacilityCategoryId = "all" | "hospital" | "pharmacy" | "emergency" | "pediatrics" | "mental";
+type FacilityCategoryId = "all" | "hospital" | "pharmacy" | "emergency";
 
 type FacilitySearchDefinition = {
   categoryLabel: string;
@@ -49,8 +49,6 @@ const categoryOptions: Array<{ id: FacilityCategoryId; label: string }> = [
   { id: "hospital", label: "병원" },
   { id: "pharmacy", label: "약국" },
   { id: "emergency", label: "응급" },
-  { id: "pediatrics", label: "소아과" },
-  { id: "mental", label: "정신건강" },
 ];
 
 const searchDefinitions: Record<FacilityCategoryId, FacilitySearchDefinition[]> = {
@@ -61,18 +59,10 @@ const searchDefinitions: Record<FacilityCategoryId, FacilitySearchDefinition[]> 
   hospital: [{ categoryLabel: "병원", query: "HP8", searchType: "category", type: "hospital" }],
   pharmacy: [{ categoryLabel: "약국", query: "PM9", searchType: "category", type: "pharmacy" }],
   emergency: [{ categoryLabel: "응급", query: "응급실", searchType: "keyword", type: "keyword" }],
-  pediatrics: [{ categoryLabel: "소아과", query: "소아과", searchType: "keyword", type: "keyword" }],
-  mental: [
-    {
-      categoryLabel: "정신건강",
-      query: "정신건강의학과",
-      searchType: "keyword",
-      type: "keyword",
-    },
-  ],
 };
 
 const extendableKeywordSearches = ["내과", "치과", "산부인과", "정형외과"];
+const emergencyMedicalKeywords = ["응급실", "응급의료", "응급센터", "병원", "의원", "의료원"];
 
 export function MedicalFacilitiesMap({
   location,
@@ -538,6 +528,7 @@ function normalizePlaceResult(
   const latitude = Number(place.y);
   const longitude = Number(place.x);
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !place.place_name) return null;
+  if (definition.query === "응급실" && !isEmergencyMedicalPlace(place)) return null;
 
   const distanceMeters = Number(place.distance) || Math.round(getDistanceMeters(origin, {
     latitude,
@@ -575,6 +566,19 @@ function dedupeFacilities(facilities: FacilityWithDistance[], radiusMeters: Sear
   return Array.from(facilityMap.values()).sort((a, b) => a.distanceMeters - b.distanceMeters);
 }
 
+function isEmergencyMedicalPlace(place: KakaoPlaceResult) {
+  const searchableText = [
+    place.place_name,
+    place.category_name,
+    place.address_name,
+    place.road_address_name,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return emergencyMedicalKeywords.some((keyword) => searchableText.includes(keyword));
+}
+
 function getFallbackFacilities(
   origin: ManualMapLocation,
   radiusMeters: SearchRadiusMeters,
@@ -598,17 +602,10 @@ function getFallbackFacilities(
     return facilities.filter((facility) => facility.category === "약국");
   }
 
-  const fallbackKeywordByCategory: Record<Exclude<FacilityCategoryId, "all" | "hospital" | "pharmacy">, string> = {
-    emergency: "응급",
-    pediatrics: "소아",
-    mental: "정신",
-  };
-  const keyword = fallbackKeywordByCategory[selectedCategory];
-
   return facilities.filter((facility) =>
     [facility.name, facility.category, facility.address, ...extendableKeywordSearches]
       .join(" ")
-      .includes(keyword),
+      .includes("응급"),
   );
 }
 
