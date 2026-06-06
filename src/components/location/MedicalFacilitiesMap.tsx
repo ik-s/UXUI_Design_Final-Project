@@ -62,7 +62,41 @@ const searchDefinitions: Record<FacilityCategoryId, FacilitySearchDefinition[]> 
 };
 
 const extendableKeywordSearches = ["내과", "치과", "산부인과", "정형외과"];
-const emergencyMedicalKeywords = ["응급실", "응급의료", "응급센터", "병원", "의원", "의료원"];
+const emergencyMedicalCategoryKeywords = ["의료", "건강", "병원", "응급", "약국"];
+const emergencyMedicalNameKeywords = ["응급실", "응급의료", "응급센터", "병원", "의원", "의료원"];
+const emergencyStrongMedicalNameKeywords = ["응급의료", "응급센터", "병원", "의원", "의료원"];
+const emergencyRejectedKeywords = [
+  "떡볶이",
+  "분식",
+  "음식점",
+  "식당",
+  "맛집",
+  "카페",
+  "커피",
+  "술집",
+  "주점",
+  "호프",
+  "포차",
+  "김밥",
+  "치킨",
+  "피자",
+  "버거",
+  "족발",
+  "보쌈",
+  "고기",
+  "한식",
+  "중식",
+  "일식",
+  "양식",
+  "요리",
+  "디저트",
+  "제과",
+  "베이커리",
+  "푸드",
+  "마라",
+  "탕후루",
+  "편의점",
+];
 
 export function MedicalFacilitiesMap({
   location,
@@ -576,7 +610,23 @@ function isEmergencyMedicalPlace(place: KakaoPlaceResult) {
     .filter(Boolean)
     .join(" ");
 
-  return emergencyMedicalKeywords.some((keyword) => searchableText.includes(keyword));
+  if (emergencyRejectedKeywords.some((keyword) => searchableText.includes(keyword))) {
+    return false;
+  }
+
+  const categoryText = place.category_name ?? "";
+  const nameText = place.place_name ?? "";
+  const categoryLooksMedical = emergencyMedicalCategoryKeywords.some((keyword) =>
+    categoryText.includes(keyword),
+  );
+  const nameLooksMedical = emergencyMedicalNameKeywords.some((keyword) =>
+    nameText.includes(keyword),
+  );
+  const strongNameLooksMedical = emergencyStrongMedicalNameKeywords.some((keyword) =>
+    nameText.includes(keyword),
+  );
+
+  return (categoryLooksMedical && nameLooksMedical) || strongNameLooksMedical;
 }
 
 function getFallbackFacilities(
